@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+  echo "Specify the number of random numbers to generate."
+  exit 1
+fi
+
+if [[ -z "$2" ]]; then
+  echo "Specify the file to write to."
+  exit 1
+fi
+
+echo "$1" | awk '{srand(systime()); for (i=0;i<$1;++i) { print (rand()*100) }}' > "$2" || echo "Could not write to file."
