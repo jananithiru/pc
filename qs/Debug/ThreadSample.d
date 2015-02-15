@@ -1,0 +1,1 @@
+ThreadSample.d: ../ThreadSample.c

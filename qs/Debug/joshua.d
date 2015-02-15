@@ -1,0 +1,1 @@
+joshua.d: ../joshua.c

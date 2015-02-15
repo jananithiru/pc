@@ -3,7 +3,7 @@
 
 #define min(x,y) ((x) < (y) ? (x) :(y))
 #
-void swap (float* x, float* y) {
+void swap2 (float* x, float* y) {
 	float temp; 
 	temp = *x; 
 	*x = *y ; 
@@ -39,18 +39,7 @@ float parition2(float* numbers, int leftIndex, int rightIndex,size_t nnumbers) {
 	return leftIndex; 
 }
 
-void quicksort (float* numbers, int leftIndex, int rightIndex) {
-	if ( leftIndex >= rightIndex ) 
-		return ;
-
-	if (leftIndex < rightIndex){
-		int pivotIndex = partition(numbers, leftIndex,rightIndex);
-		quicksort(numbers,leftIndex,pivotIndex-1); // -1 
-		quicksort(numbers,pivotIndex+1,rightIndex); // +1 leave one element space for index 
-	}	
-}
-
-int partition( float* a, int l, int r) {
+int partition2( float* a, int l, int r) {
    int pivot, i, j, t;
    pivot = a[l];
    i = l; j = r+1;
@@ -67,7 +56,23 @@ int partition( float* a, int l, int r) {
    return j;
 }
 
-int main() {
+void quicksort2(float* numbers, int leftIndex, int rightIndex) {
+
+	if ( leftIndex >= rightIndex )
+		return ;
+
+	int pivotIndex = partition(numbers, leftIndex,rightIndex);
+
+	if (leftIndex < pivotIndex)
+		quicksort(numbers,leftIndex,pivotIndex-1);
+	 if (pivotIndex + 1 < rightIndex)
+		quicksort(numbers,pivotIndex+1,rightIndex);
+
+}
+
+
+
+int main6() {
 
 	int i = 0; 
 	float numbers[] = {11,123,45,167,89,2,8,1};

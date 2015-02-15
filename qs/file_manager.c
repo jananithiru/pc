@@ -1,6 +1,9 @@
 /*
- * qs_pthreads.c
 
+ * qs_pthreads.c
+// const char * const myPtr = &char_A;
+ *  The third declares a pointer to a float where both the
+ *  pointer value and the value being pointed at will not change
  *
  *  Created on: Feb 9, 2015
  *      Author: jthiru
@@ -8,126 +11,80 @@
 #define _GNU_SOURCE
 #include "my_headers.h"
 
+void* print_helper(void *ptr) {
+	print_thread_data *data;
+	data = (print_thread_data *) ptr; /* type cast to a pointer to thdata */
 
-/**
-* @brief Write an array of floats to a file.
-*
-* @param filename The name of the file to write to.
-* @param numbers The array of numbers.
-* @param nnumbers How many numbers to write.
-*/
-static void print_numbers(
-    char const * const filename,
-    float const * const numbers,
-    size_t const nnumbers)
-{
-  size_t i;
-  FILE * fout;
+	/* do the work */
+	print_numbers(data->filename, data->numbers, data->numbers);
 
-  /* open file */
-  if((fout = fopen(filename, "w")) == NULL) {
-    fprintf(stderr, "error opening '%s'\n", filename);
-    abort();
-  }
-
-  /* write numbers to fout */
-
-  for(i = 0; i < nnumbers; ++i) {
-    fprintf(fout, "%0.03f\n", numbers[i]);
-  }
-
-  fclose(fout);
+	pthread_exit(0); /* exit */
 }
 
-/**
-* @brief Read a file of floats into an array
-*
-* @param filename The name of the file to write to.
-* @param numbers The array to store the floats.
-* @param nnumbers The size of the array
-*/
+void* read_helper(void *ptr) {
+	read_thread_data *data;
+	data = (read_thread_data *) ptr; /* type cast to a pointer to thdata */
 
-static void read_numbers(
+	/* do the work */
+	read_numbers(data->filename, data->numbers);
+
+	pthread_exit(0); /* exit */
+}
+
+
+void print_numbers(
 		char const * const filename,
-		    float * const numbers,
-		    size_t* nnumbers)
-{
-   size_t i = 0 ;
-   FILE * fin ;
-   int scanresult;
+		float const * const numbers,
+		size_t const nnumbers) {
+	size_t i;
+	FILE * fout;
 
-   if((fin = fopen(filename, "r")) == NULL) {
-     fprintf(stderr, "error opening '%s'\n", filename);
-     abort();
-   }
-
-   while((scanresult=fscanf(fin,"%f",numbers+i)) > 0) {
-   	   i++;
-   }
-
-   *nnumbers = i;
-
-   fclose(fin);
-}
-
-void readFloatsIntoArray () {
-
-	FILE* fin ;
-	float number[3] ;
-	int i=0;
-	int x=0;
-	int scanresult;
-
-	if((fin = fopen("3small_test.txt", "r")) == NULL) {
-	     fprintf(stderr, "error opening '%s'\n");
-	     abort();
-	   }
-
-	for (i=0; i<x; i++) {
-		printf("x%d %f\n",i,number[i]);
+	if ((fout = fopen(filename, "w")) == NULL) {
+		fprintf(stderr, "error opening '%s'\n", filename);
+		abort();
 	}
 
+	for (i = 0; i < nnumbers; ++i) {
+		fprintf(fout, "%0.03f\n", numbers[i]);
+	}
 
-/*	printf("a%d-",fscanf(fin,"%f", number));
-	printf("aa2%d-",fscanf(fin,"%f", number+1));
-	printf("aaa%d-",fscanf(fin,"%f", number+2));
-	printf("b-%d--",fscanf(fin,"%d", x));
-	printf("b-%d--",fscanf(fin,"%d", x));
-
-	for (i=0; i<3; i++) {
-		printf("x%d %f\n",i,number[i]);
-	}*/
+	fclose(fout);
+}
 
 
+void read_numbers(
+		char const * const filename,
+		array_d * const numbers) {
+
+	FILE * fin;
+	float temp;
+
+	int scanresult;
+
+	if ((fin = fopen(filename, "r")) == NULL) {
+		fprintf(stderr, "error opening '%s'\n",filename);
+		abort();
+	}
+
+	while ((scanresult = fscanf(fin, "%f", &temp)) > 0) {
+		insert_array(numbers,temp);
+	}
 
 	fclose(fin);
 }
 
-int main5 () {
-	main4();
-	return 0;
-}
+int fm_main() {
 
-int main4() {
+	array_d numbers;
+	init_array(&numbers, INITIAL_SIZE);
 
-	// Step 1:
-	//Reads the input file of floats seperated by new line
-	//Prints output to file in non decreasing order.
-	//Use output function given
-	// e.g. small_test.txt 2 small_test.out
-	// Read in a chunk of numbers and then make the threads execute them
-
-	int i; //loop variables
-	int NUM = 100;
-	float numbers[100] = {0.0} ;
-
-	size_t nnumbers ;
 	const char input_file[] = "small_test.txt";
 	const char output_file[] = "small_test.out";
 
-	read_numbers(input_file, numbers, &nnumbers);
-	print_numbers(output_file, numbers, nnumbers);
+	read_numbers(input_file, &numbers);
+	print_numbers(output_file, numbers.array, numbers.used);
+
+	free_array(&numbers);
 
 }
 
-// const char * const myPtr = &char_A; The third declares a pointer to a float where both the pointer value and the value being pointed at will not change
