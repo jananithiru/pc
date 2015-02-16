@@ -51,7 +51,7 @@ int main_4(int argc, char** argv) {
 	struct timespec t1, t2;
 	clock_gettime(CLOCK_REALTIME, &t1);
 
-	quicksort(numbers.array, 0, numbers.used - 1);
+	//quicksort(numbers.array, 0, numbers.used - 1);
 	//parallel_qs(numbers.array, numbers.used, THREAD_LEVEL); // THREAD LEVEL
 
 	clock_gettime(CLOCK_REALTIME, &t2);

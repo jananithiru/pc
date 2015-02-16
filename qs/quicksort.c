@@ -1,54 +1,37 @@
 #include "my_headers.h"
-#define SIZE 8
 
 #define min(x,y) ((x) < (y) ? (x) :(y))
-int iter=0;
 
-
-
-int choosePivot(float* numbers, int leftIndex, int rightIndex) {
-	return leftIndex;
+int choose_pivot(int left, int right) {
+	int pivot_index = (int) (left + (rand() % (int)(right - left + 1 )));
+	return pivot_index;
 }
 
-
-int partition( float* a, int l, int r) {
-   int i, j;
-   float pivotValue, t;
-
-   pivotValue = a[l];
-
-   i = l; j = r+1;
-
-   while(1)
-   {
-   	do ++i; while( a[i] <= pivotValue && i <= r );
-   	do --j; while( a[j] > pivotValue );
-   	if( i >= j ) break;
-   	t = a[i]; a[i] = a[j]; a[j] = t;
-   }
-   t = a[l]; a[l] = a[j]; a[j] = t;
-   return j;
+void swap(float numbers[], int i, int j) {
+	float temp = numbers[i];
+	numbers[i] = numbers[j];
+	numbers[j] = temp;
 }
 
-void quicksort(float* numbers, int leftIndex, int rightIndex) {
-
-	if ( leftIndex >= rightIndex )
-		return ;
-
-	int pivotIndex = partition(numbers, leftIndex,rightIndex);
-
-	if (leftIndex < pivotIndex){
-		quicksort(numbers,leftIndex,pivotIndex);
+int is_pthread_error(int return_code, const char function_name[]) {
+	if (return_code) {
+		printf("PTHREAD ERROR; Function: %s Return code %d\n", function_name,
+				return_code);
 	}
-	if (pivotIndex + 1 < rightIndex)
-		quicksort(numbers,pivotIndex+1,rightIndex);
+	return return_code;
+}
 
+int is_sort_correct(float* const numbers, float* const orig_numbers, size_t size) {
+	//qsort(orig_numbers,);
+	//diff_files();
+	//sort orginal list and sorted list
+	return 1;
 }
 
 int is_sorted(float* const numbers, size_t size) {
 	for (int i = 1; i < size; i++) {
 		if (numbers[i] < numbers[i - 1]) {
-			printf("ERROR: at loc %d, %f < %f \n", i, numbers[i],
+			printf("SORT ERROR; At numbers[%d] %f should not be before %f \n", i, numbers[i],
 					numbers[i - 1]);
 			return 0;
 		}
@@ -56,122 +39,132 @@ int is_sorted(float* const numbers, size_t size) {
 	return 1;
 }
 
-int is_sort_correct(float* const  numbers_my_qs, float* const numbers_backup) {
-	return 0;
+
+
+void quicksort(float numbers[], int size) {
+	qs_helper(numbers, 0, size - 1);
 }
 
-void parallel_qs(float* numbers, size_t nnumbers, int level)
-{
-	//Want joinable threads (usually default).
+void qs_helper(float numbers[], int left, int right) {
+	if (left >= right)
+		return;
+	int pivot__index = partition_qs(numbers, left, right);
+	qs_helper(numbers, left, pivot__index - 1);
+	qs_helper(numbers, pivot__index + 1, right);
+}
+
+// Implementation specific to Wiki/Quicksort. Not a stable sort
+
+int partition_qs(float numbers[], int left, int right) {
+	int pivot_index = choose_pivot(left, right);
+	float pivot_value = numbers[pivot_index];
+
+	swap(numbers, pivot_index, right);
+
+	int store_index = left;
+
+	for (int i = left; i < right; i++) {
+		if (numbers[i] < pivot_value) {
+			swap(numbers, i, store_index);
+			store_index++;
+		}
+	}
+	swap(numbers, right, store_index);
+	return store_index;
+}
+
+void parallel_qs(float numbers[], int size, int tlevel) {
+
+	int return_code;
+	void *join_thr_arg;
+
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-	qs_thread_data thr_data;
-	thr_data.numbers = numbers;
-	thr_data.left = 0;
-	thr_data.right = nnumbers-1 ; // TODO: typecast
-	thr_data.level = level ;
+	qs_thread_data td;
+	td.numbers = numbers;
+	td.left = 0;
+	td.right = size - 1;
+	td.level = tlevel;
 
-	pthread_t master_thread;
-	int err = pthread_create(&master_thread, &attr, parallel_qs_helper,
-						(void *) &thr_data);
-	if (err)
-	{
-    	printf("ERROR; return code from pthread_create() is %d\n", err);
-    	exit(-1);
-    }
+	pthread_t theThread;
+	return_code = pthread_create(&theThread, &attr, parallel_qs_helper, (void *) &td);
+	if(is_pthread_error(return_code,"pthread_create"))
+				exit(-1);
 
 	pthread_attr_destroy(&attr);
-	void *status;
-	err = pthread_join(master_thread, &status); //void *status;
-
-	if (err)
-	{
-		printf("ERROR; return code from pthread_join() is %d\n", err);
-		exit(-1);
-	}
+	return_code = pthread_join(theThread, &join_thr_arg);
+	if(is_pthread_error(return_code,"pthread_join"))
+				exit(-1);
 }
 
-void *parallel_qs_helper(void *thread_data)
-{
-	int mid, t, rc;
-	void *status;
+void init_qs_thread_data_array(qs_thread_data* thread_data_array, int mid,
+		qs_thread_data* thr_data) {
+	for (int i = 0; i < 2; i++) {
+		thread_data_array[i].numbers = thr_data->numbers;
+		thread_data_array[i].level = thr_data->level - 1;
+	}
+	thread_data_array[0].left = thr_data->left;
+	thread_data_array[0].right = mid - 1;
+	thread_data_array[1].left = mid + 1;
+	thread_data_array[1].right = thr_data->right;
+}
+
+void *parallel_qs_helper(void *thread_data) {
+
+	void *join_thr_arg;
 
 	qs_thread_data *thr_data;
 	thr_data = (qs_thread_data *) thread_data;
 
-	if (thr_data->level <= 0 || thr_data->left == thr_data->right)
-	{
-		quicksort(thr_data->numbers, thr_data->left, thr_data->right);
+	if (thr_data->level <= 0 || thr_data->left == thr_data->right) {
+		qs_helper(thr_data->numbers, thr_data->left, thr_data->right);
 		pthread_exit(NULL);
 	}
 
-	//Want joinable threads (usually default).
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-	mid = partition(thr_data->numbers, thr_data->left, thr_data->right);
+	int mid = partition_qs(thr_data->numbers, thr_data->left, thr_data->right);
 
 	qs_thread_data thread_data_array[2];
-
-	for (t = 0; t < 2; t ++)
-	{
-		thread_data_array[t].numbers = thr_data->numbers;
-		thread_data_array[t].level = thr_data->level - 1;
-	}
-
-	thread_data_array[0].left = thr_data->left;
-	thread_data_array[0].right = mid-1;
-	thread_data_array[1].left = mid+1;
-	thread_data_array[1].right = thr_data->right;
+	init_qs_thread_data_array(&thread_data_array, mid, thr_data);
 
 	pthread_t threads[2];
-
-	for (t = 0; t < 2; t ++)
-	{
-		rc = pthread_create(&threads[t], &attr, parallel_qs_helper,
-							(void *) &thread_data_array[t]);
-		if (rc)
-		{
-    		printf("ERROR; return code from pthread_create() is %d\n", rc);
-    		exit(-1);
-    	}
+	for (int i = 0; i < 2; i++) {
+		int return_code = pthread_create(&threads[i], &attr, parallel_qs_helper,
+				(void *) &thread_data_array[i]);
+		if(is_pthread_error(return_code,"pthread_create"))
+			exit(-1);
 	}
 
 	pthread_attr_destroy(&attr);
-	//Now, join the left and right sides to finish.
-	for (t = 0; t < 2; t ++)
-	{
-		rc = pthread_join(threads[t], &status);
-		if (rc)
-		{
-			printf("ERROR; return code from pthread_join() is %d\n", rc);
+
+	for (int i = 0; i < 2; i++) {
+		int return_code = pthread_join(threads[i], &join_thr_arg);
+		if(is_pthread_error(return_code,"pthread_join"))
 			exit(-1);
-		}
 	}
 
 	pthread_exit(NULL);
 }
 
-
-
 int qs_main() {
 
-	int i = 0; 
-	float numbers[] = {11,123,45,167,89,2,8,1};
-	float nnumbers = SIZE;
+	int i = 0;
+	float numbers[] = { 11, 123, 45, 167, 89, 2, 8, 1 };
+	float nnumbers = 8;
 
-	for (i=0; i < nnumbers; i++)
-			printf (" %f",numbers[i]);
+	for (i = 0; i < nnumbers; i++)
+		printf(" %f", numbers[i]);
 
-
-	quicksort(numbers,0,nnumbers-1);
+	quicksort(numbers, nnumbers - 1);
 
 	printf("\n\nSorted array is:  ");
-			for(i = 0; i < nnumbers; ++i)
-				printf(" %f ", numbers[i]);
+	for (i = 0; i < nnumbers; ++i)
+		printf(" %f ", numbers[i]);
 	return 0;
 
 }
