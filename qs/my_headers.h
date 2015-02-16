@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <time.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "my_constants.h"
 
+#define _GNU_SOURCE
 
 /*
  * dynammic array functions

@@ -4,7 +4,6 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../ThreadSample.c \
 ../array.c \
 ../file_manager.c \
 ../pthreads.c \
@@ -12,7 +11,6 @@ C_SRCS += \
 ../quicksort.c 
 
 OBJS += \
-./ThreadSample.o \
 ./array.o \
 ./file_manager.o \
 ./pthreads.o \
@@ -20,7 +18,6 @@ OBJS += \
 ./quicksort.o 
 
 C_DEPS += \
-./ThreadSample.d \
 ./array.d \
 ./file_manager.d \
 ./pthreads.d \
@@ -32,7 +29,7 @@ C_DEPS += \
 %.o: ../%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -O0 -g3 -Wall -c -fmessage-length=0 -std=c99 -pthread -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	gcc -O0 -g3 -Wall -c -fmessage-length=0 -std=gnu99 -pthread -lrt -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

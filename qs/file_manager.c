@@ -8,7 +8,6 @@
  *  Created on: Feb 9, 2015
  *      Author: jthiru
  */
-#define _GNU_SOURCE
 #include "my_headers.h"
 
 void* print_helper(void *ptr) {
@@ -31,6 +30,11 @@ void* read_helper(void *ptr) {
 	pthread_exit(0); /* exit */
 }
 
+void print_time(
+    double const seconds)
+{
+  printf("Sort Time: %0.04fs\n", seconds);
+}
 
 void print_numbers(
 		char const * const filename,
