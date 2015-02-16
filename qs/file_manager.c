@@ -16,7 +16,7 @@ void* print_helper(void *ptr) {
 	data = (print_thread_data *) ptr; /* type cast to a pointer to thdata */
 
 	/* do the work */
-	print_numbers(data->filename, data->numbers, data->numbers);
+	print_numbers(data->filename, data->numbers, data->nnumbers);
 
 	pthread_exit(0); /* exit */
 }

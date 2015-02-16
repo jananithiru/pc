@@ -23,9 +23,12 @@ void init_array(array_d* arr, size_t initial_size);
 void insert_array(array_d* arr, float num);
 void free_array(array_d* arr);
 
+
+
 /*
  * file manager functions
  */
+
 typedef struct {
 	char * filename;
 	array_d * numbers;
@@ -61,7 +64,7 @@ void *parallel_qs_helper(
 		float* numbers,
 		int left,
 		int right);
-bool is_sorted(
+int is_sorted(
 		float* numbers,
 		int size);
 void quicksort (

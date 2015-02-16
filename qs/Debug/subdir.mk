@@ -7,7 +7,6 @@ C_SRCS += \
 ../ThreadSample.c \
 ../array.c \
 ../file_manager.c \
-../joshua.c \
 ../pthreads.c \
 ../qs_threads.c \
 ../quicksort.c 
@@ -16,7 +15,6 @@ OBJS += \
 ./ThreadSample.o \
 ./array.o \
 ./file_manager.o \
-./joshua.o \
 ./pthreads.o \
 ./qs_threads.o \
 ./quicksort.o 
@@ -25,7 +23,6 @@ C_DEPS += \
 ./ThreadSample.d \
 ./array.d \
 ./file_manager.d \
-./joshua.d \
 ./pthreads.d \
 ./qs_threads.d \
 ./quicksort.d 

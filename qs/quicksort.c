@@ -31,7 +31,7 @@ float parition2(float* numbers, int leftIndex, int rightIndex,size_t nnumbers) {
 		rightIndex++; 
 
 	 if (leftIndex <= rightIndex) {
-		swap(numbers+leftIndex,numbers+rightIndex); 
+		//swap(numbers+leftIndex,numbers+rightIndex);
 		leftIndex++; 
 		rightIndex--;
 	}
@@ -39,24 +39,26 @@ float parition2(float* numbers, int leftIndex, int rightIndex,size_t nnumbers) {
 	return leftIndex; 
 }
 
-int partition2( float* a, int l, int r) {
-   int pivot, i, j, t;
-   pivot = a[l];
+int partition( float* a, int l, int r) {
+   int i, j;
+   float pivotValue, t;
+
+   pivotValue = a[l];
+
    i = l; j = r+1;
 
    while(1)
    {
-   	do ++i; while( a[i] <= pivot && i <= r );
-   	do --j; while( a[j] > pivot );
+   	do ++i; while( a[i] <= pivotValue && i <= r );
+   	do --j; while( a[j] > pivotValue );
    	if( i >= j ) break;
    	t = a[i]; a[i] = a[j]; a[j] = t;
    }
-   t = a[l];
-   a[l] = a[j]; a[j] = t;
+   t = a[l]; a[l] = a[j]; a[j] = t;
    return j;
 }
 
-void quicksort2(float* numbers, int leftIndex, int rightIndex) {
+void quicksort(float* numbers, int leftIndex, int rightIndex) {
 
 	if ( leftIndex >= rightIndex )
 		return ;
@@ -64,7 +66,7 @@ void quicksort2(float* numbers, int leftIndex, int rightIndex) {
 	int pivotIndex = partition(numbers, leftIndex,rightIndex);
 
 	if (leftIndex < pivotIndex)
-		quicksort(numbers,leftIndex,pivotIndex-1);
+		quicksort(numbers,leftIndex,pivotIndex);
 	 if (pivotIndex + 1 < rightIndex)
 		quicksort(numbers,pivotIndex+1,rightIndex);
 
@@ -72,17 +74,21 @@ void quicksort2(float* numbers, int leftIndex, int rightIndex) {
 
 
 
-int main6() {
+int qs_main() {
 
 	int i = 0; 
 	float numbers[] = {11,123,45,167,89,2,8,1};
-	float nnumbers = SIZE; 
-	quicksort(numbers,0,nnumbers-1);
+	float nnumbers = SIZE;
+
 	for (i=0; i < nnumbers; i++)
-		printf ("%f",numbers[i]);
+			printf (" %f",numbers[i]);
+
+
+	quicksort(numbers,0,nnumbers-1);
+
 	printf("\n\nSorted array is:  ");
-		for(i = 0; i < nnumbers; ++i)
-			printf(" %f ", numbers[i]);
+			for(i = 0; i < nnumbers; ++i)
+				printf(" %f ", numbers[i]);
 	return 0;
 
 }
