@@ -4,12 +4,7 @@
 #define min(x,y) ((x) < (y) ? (x) :(y))
 int iter=0;
 
-void swap (float* x, float* y) {
-	float temp;
-	temp = *x;
-	*x = *y ;
-	*y = temp;
-}
+
 
 int choosePivot(float* numbers, int leftIndex, int rightIndex) {
 	return leftIndex;

@@ -1,6 +1,6 @@
 # include "my_headers.h"
 
-int main3(int argc, char** argv) {
+int main_4(int argc, char** argv) {
 
 	if (argc != 4) {
 		printf("USAGE: "
@@ -25,29 +25,34 @@ int main3(int argc, char** argv) {
 
 	int j = 0;
 	int err;
-	pthread_t tid[NUM_OF_THREADS];
+	pthread_t tid[2];
 
-	err = pthread_create(&(tid[j]),NULL,
+	err = pthread_create(&(tid[0]),NULL,
 			&read_helper,(void *)&read_thr);
 	if (err != 0)
 		printf("\ncan't create thread :[%s]", strerror(err));
 	else
 		printf("\nRead Thread created successfully\n");
 
-	j++;
+	int rc;
 
+	rc = pthread_join(tid[0], NULL);
 
-	struct timespec t1, t2;
-	clock_gettime(CLOCK_REALTIME, &t1);
+	if (rc){
+			fprintf(stderr, "Error joining thread\n");
+			return 2;
+	}
 
 	/*
 	 * Sequential or Parallel Quicksort
 	 */
 
 
-//	quicksort(numbers.array, 0, numbers.used - 1);
+	struct timespec t1, t2;
+	clock_gettime(CLOCK_REALTIME, &t1);
 
-	parallel_qs(numbers.array, numbers.used, THREAD_LEVEL); // THREAD LEVEL
+	quicksort(numbers.array, 0, numbers.used - 1);
+	//parallel_qs(numbers.array, numbers.used, THREAD_LEVEL); // THREAD LEVEL
 
 	clock_gettime(CLOCK_REALTIME, &t2);
 	double seconds = (double) ((t2.tv_sec + t2.tv_nsec * 1e-9)
@@ -57,55 +62,25 @@ int main3(int argc, char** argv) {
 
 	is_sorted(numbers.array, numbers.used);
 
-
-	/*if (nthreads == 1) {
-		struct timespec t1, t2;
-		clock_gettime(CLOCK_REALTIME, &t1);
-
-		quicksort(numbers.array, 0, numbers.used - 1);
-		clock_gettime(CLOCK_REALTIME, &t2);
-		double seconds = (double) ((t2.tv_sec + t2.tv_nsec * 1e-9)
-				- (double) (t1.tv_sec + t1.tv_nsec * 1e-9));
-		print_time(seconds);
-
-		is_sorted(numbers.array, numbers.used);
-		//is_sort_correct(numbers.array,numbers_backup);
-	}else {
-*/
-	/*struct timespec t1, t2;
-		clock_gettime(CLOCK_REALTIME, &t1);
-		//Work goes here
-		parallel_qs(numbers.array, numbers.used, THREAD_LEVEL); // THREAD LEVEL
-		clock_gettime(CLOCK_REALTIME, &t2);
-		double seconds = (double) ((t2.tv_sec + t2.tv_nsec * 1e-9)
-				- (double) (t1.tv_sec + t1.tv_nsec * 1e-9));
-		print_time(seconds);
-
-		is_sorted(numbers.array, numbers.used);
-		//is_sort_correct(numbers.array,numbers_backup);
-//	}*/
-
 	print_thread_data print_thr;
 	print_thr.filename = outputfile;
 	print_thr.numbers = numbers.array;
 	print_thr.nnumbers = numbers.used;
 
-	err = pthread_create(&(tid[j]), NULL,
+	err = pthread_create(&(tid[1]), NULL,
 			&print_helper,(void *)&print_thr);
 	if (err != 0)
 		printf("\ncan't create thread :[%s]", strerror(err));
 	else
 		printf("\n Write Thread created successfully\n");
 
-	sleep(15);
+	int rc2;
+	rc2 = pthread_join(tid[1], NULL);
 
-	for (int j = 0; j < 2; j++) {
-		if (pthread_join(tid[j], NULL)) {
+	if (rc2){
 			fprintf(stderr, "Error joining thread\n");
 			return 2;
-		}
 	}
-
 
 	free_array(&numbers);
 	//pthread_exit();
