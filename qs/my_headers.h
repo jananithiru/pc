@@ -57,19 +57,15 @@ void read_numbers(
  * quicksort functions
  */
 
-void parallel_qs(
-		float* numbers,
-		size_t size,
-		int level);
-void* parallel_qs_helper(
-		void* thread_data);
-int is_sorted(
-		float* numbers,
-		size_t size);
-void quicksort (
-		float* numbers,
-		int leftIndex,
-		int rightIndex);
+//for regular implementation
+void quicksort(float numbers[], int size);
+void qs_helper(float numbers[], int left, int right);
+
+//for parallel implementation
+void parallel_qs(float numbers[], int size, int tlevel);
+void *parallel_qs_helper(void *thread_data);
+
+int is_sorted(float* const numbers, size_t size);
 
 typedef struct {
 	float *numbers;

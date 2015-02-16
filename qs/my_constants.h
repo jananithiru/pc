@@ -8,7 +8,5 @@
 
 
 /* defines the number of threads used to parallelize quicksort */
-#define NUM_OF_THREADS 2
 #define LENGTH_FILENAME 64
 #define INITIAL_SIZE 100000// 000
-#define THREAD_LEVEL 2
