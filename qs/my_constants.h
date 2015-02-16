@@ -10,3 +10,4 @@
 /* defines the number of threads used to parallelize quicksort */
 #define LENGTH_FILENAME 64
 #define INITIAL_SIZE 100000// 000
+#define TREE_DEPTH 16

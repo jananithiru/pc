@@ -3,7 +3,7 @@
 #define min(x,y) ((x) < (y) ? (x) :(y))
 
 int choose_pivot(int left, int right) {
-	int pivot_index = (int) (left + (rand() % (int)(right - left + 1 )));
+	int pivot_index = (int) (left + (right-left + 1)*(1.0*rand()/RAND_MAX));
 	return pivot_index;
 }
 
@@ -39,20 +39,6 @@ int is_sorted(float* const numbers, size_t size) {
 	return 1;
 }
 
-
-
-void quicksort(float numbers[], int size) {
-	qs_helper(numbers, 0, size - 1);
-}
-
-void qs_helper(float numbers[], int left, int right) {
-	if (left >= right)
-		return;
-	int pivot__index = partition_qs(numbers, left, right);
-	qs_helper(numbers, left, pivot__index - 1);
-	qs_helper(numbers, pivot__index + 1, right);
-}
-
 // Implementation specific to Wiki/Quicksort. Not a stable sort
 
 int partition_qs(float numbers[], int left, int right) {
@@ -81,6 +67,7 @@ void parallel_qs(float numbers[], int size, int tlevel) {
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+	pthread_attr_setstacksize(&attr,500);
 
 	qs_thread_data td;
 	td.numbers = numbers;
@@ -121,7 +108,10 @@ void *parallel_qs_helper(void *thread_data) {
 	if (thr_data->level <= 0 || thr_data->left == thr_data->right) {
 		qs_helper(thr_data->numbers, thr_data->left, thr_data->right);
 		pthread_exit(NULL);
-	}
+	} else if (thr_data->level >= TREE_DEPTH) {// only 2^treeDepth threads, after which we run in sequence
+		qs_helper(thr_data->numbers, thr_data->left, thr_data->right);
+		pthread_exit(NULL);
+	} else {
 
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
@@ -149,6 +139,19 @@ void *parallel_qs_helper(void *thread_data) {
 	}
 
 	pthread_exit(NULL);
+	}
+}
+
+void quicksort(float numbers[], int size) {
+	qs_helper(numbers, 0, size - 1);
+}
+
+void qs_helper(float numbers[], int left, int right) {
+	if (left >= right)
+		return;
+	int pivot__index = partition_qs(numbers, left, right);
+	qs_helper(numbers, left, pivot__index - 1);
+	qs_helper(numbers, pivot__index + 1, right);
 }
 
 int qs_main() {
