@@ -1,10 +1,11 @@
 # include "my_headers.h"
 
-double get_time_diff(const struct timeval* end,
-		const struct timeval* start) {
-	double diff = ((end->tv_sec * 1000000 + end->tv_usec)
-			- (start->tv_sec * 1000000 + start->tv_usec)) / 1000000.0;
-	return diff;
+double get_time_diff(const struct timespec* stop,
+		const struct timespec* start) {
+	/*double diff = ((end->tv_sec *BILLION + end->tv_nsec )
+			- (start->tv_sec * BILLION + start->tv_nsec))/BILLION;*/
+	return ( stop->tv_sec - start->tv_sec )
+	          + (double)( stop->tv_nsec - start->tv_nsec )/(double) BILLION;
 }
 
 float* copy_numbers(size_t nnumbers, const array_d* input_floats) {
@@ -15,7 +16,7 @@ float* copy_numbers(size_t nnumbers, const array_d* input_floats) {
 
 int main(int argc, char** argv) {
 
-	struct timeval start, end;
+	struct timeval start, stop;
 	char inputfile[LENGTH_FILENAME], outputfile[LENGTH_FILENAME];
 
 	if (argc != 4) {
@@ -24,6 +25,7 @@ int main(int argc, char** argv) {
 				"input_filename "
 				"num_threads "
 				"output_filename");
+		exit(0);
 	}
 
 	strcpy(inputfile, argv[1]);
@@ -33,31 +35,46 @@ int main(int argc, char** argv) {
 	array_d input_floats;
 	init_array(&input_floats, INITIAL_SIZE);
 
-	read_numbers(inputfile, &input_floats); // MUST FREE
+	//read_numbers(inputfile, &input_floats); // MUST FREE
+
+	/*
+	 * Read numbers as a thread
+	 */
+	threaded_read_numbers(inputfile, &input_floats);
 
 	size_t nnumbers = input_floats.used;
 
 	float* numbers = copy_numbers(nnumbers, &input_floats); // MUST FREE
 
-	gettimeofday(&start, NULL);
+	clock_gettime(CLOCK_REALTIME, &start);
+
+	/*
+	 * Run parallel quicksort.
+	 * Set nthreads =0 for sequential
+	 * 1 for 2 threads , 2 for 4 threads , 3 for 8 threads and so on.
+	 */
 
 	parallel_qs(numbers, nnumbers, nthreads);
 
-	gettimeofday(&end, NULL);
+	clock_gettime(CLOCK_REALTIME, &stop);
 
-	print_time(get_time_diff(&end, &start));
+	print_time(get_time_diff(&stop, &start));
 
 	is_sorted(numbers, nnumbers);
 
 	is_sort_correct(numbers,input_floats.array);
 
-	print_numbers(outputfile, numbers, nnumbers);
+	/*
+	 * Write numbers as a thread
+	 */
+
+	// print_numbers(outputfile, numbers, nnumbers);
+	threaded_print_numbers(outputfile, numbers, nnumbers);
 
 	free(numbers);
 
 	free_array(&input_floats);
 
-	pthread_exit(NULL);
 }
 
 

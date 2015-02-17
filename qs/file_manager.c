@@ -17,7 +17,7 @@ void* print_helper(void *ptr) {
 	/* do the work */
 	print_numbers(data->filename, data->numbers, data->nnumbers);
 
-	pthread_exit(0); /* exit */
+	pthread_exit(NULL); /* exit */
 }
 
 void* read_helper(void *ptr) {
@@ -27,12 +27,85 @@ void* read_helper(void *ptr) {
 	/* do the work */
 	read_numbers(data->filename, data->numbers);
 
-	pthread_exit(0); /* exit */
+	pthread_exit(NULL); /* exit */
+}
+
+void init_thread(pthread_attr_t* attr) {
+	pthread_attr_init(&*attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+}
+
+void threaded_read_numbers(
+		char const * const filename,
+		array_d * const numbers) {
+
+	int return_code;
+
+	pthread_attr_t attr;
+
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+
+	read_thread_data rd;
+	rd.numbers = numbers;
+	rd.filename = filename;
+
+
+	pthread_t t;
+
+	return_code = pthread_create(&t, &attr, read_helper, (void *) &rd);
+
+	if(is_pthread_error(return_code,"pthread_create"))
+				exit(-1);
+
+	pthread_attr_destroy(&attr);
+
+	void *join_thr_arg;
+
+	return_code = pthread_join(t, &join_thr_arg);
+
+	if(is_pthread_error(return_code,"pthread_join"))
+				exit(-1);
+
+}
+
+void threaded_print_numbers(
+		char const * const filename,
+				float const * const numbers,
+				size_t const nnumbers) {
+
+	int return_code;
+
+	print_thread_data pd;
+	pd.filename = filename;
+	pd.numbers = numbers;
+	pd.nnumbers = nnumbers;
+
+	pthread_attr_t attr;
+
+	init_thread(&attr);
+
+	pthread_t t;
+
+	return_code = pthread_create(&t, &attr, print_helper, (void *) &pd);
+
+	if(is_pthread_error(return_code,"pthread_create"))
+				exit(-1);
+
+	pthread_attr_destroy(&attr);
+
+	void *join_thr_arg;
+
+	return_code = pthread_join(t, &join_thr_arg);
+
+	if(is_pthread_error(return_code,"pthread_join"))
+				exit(-1);
+
 }
 
 void print_time(
-    double const seconds)
-{
+    double const seconds) {
   printf("Sort Time: %0.04fs\n", seconds);
 }
 
