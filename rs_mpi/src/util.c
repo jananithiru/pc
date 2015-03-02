@@ -14,7 +14,7 @@ void read_numbers(
 		array_d * const numbers) {
 
 	FILE * fin;
-	float temp;
+	unsigned int temp;
 
 	int scanresult;
 
@@ -23,7 +23,7 @@ void read_numbers(
 		abort();
 	}
 
-	while ((scanresult = fscanf(fin, "%d", &temp)) > 0) {
+	while ((scanresult = fscanf(fin, "%u", &temp)) > 0) {
 		insert_array(numbers,temp);
 	}
 
@@ -39,7 +39,7 @@ void read_numbers(
 * @param numbers The array of numbers.
 * @param nnumbers How many numbers to write.
 */
-static void print_numbers(
+void print_numbers(
     char const * const filename,
     int const * const numbers,
     size_t const nnumbers)
@@ -67,7 +67,7 @@ static void print_numbers(
 *
 * @param seconds Seconds spent sorting.
 */
-static void print_time(
+void print_time(
     double const seconds)
 {
   printf("Sort Time: %0.04fs\n", seconds);

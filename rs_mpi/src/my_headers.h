@@ -24,8 +24,13 @@ void init_array(array_d* arr, size_t initial_size);
 void insert_array(array_d* arr, unsigned int num);
 void free_array(array_d* arr);
 
+/*
+ * print_numbers provided
+ */
 
-
-
+void print_numbers(
+    char const * const filename,
+    int const * const numbers,
+    size_t const nnumbers);
 
 
