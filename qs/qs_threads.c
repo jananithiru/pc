@@ -14,7 +14,9 @@ float* copy_numbers(size_t nnumbers, const array_d* input_floats) {
 	return numbers;
 }
 
-int main(int argc, char** argv) {
+int extract_thread_level(int nthreads);
+
+int main2(int argc, char** argv) {
 
 	struct timeval start, stop;
 	char inputfile[LENGTH_FILENAME], outputfile[LENGTH_FILENAME];
@@ -32,14 +34,17 @@ int main(int argc, char** argv) {
 	int nthreads = atoi(argv[2]); //strtoimax(argv[2]);
 	strcpy(outputfile, argv[3]);
 
+	int thread_level = extract_thread_level(nthreads);
+
 	array_d input_floats;
 	init_array(&input_floats, INITIAL_SIZE);
-
-	//read_numbers(inputfile, &input_floats); // MUST FREE
 
 	/*
 	 * Read numbers as a thread
 	 */
+
+	//read_numbers(inputfile, &input_floats); // MUST FREE
+
 	threaded_read_numbers(inputfile, &input_floats);
 
 	size_t nnumbers = input_floats.used;
@@ -54,7 +59,7 @@ int main(int argc, char** argv) {
 	 * 1 for 2 threads , 2 for 4 threads , 3 for 8 threads and so on.
 	 */
 
-	parallel_qs(numbers, nnumbers, nthreads);
+	parallel_qs(numbers, nnumbers, thread_level);
 
 	clock_gettime(CLOCK_REALTIME, &stop);
 
@@ -77,4 +82,21 @@ int main(int argc, char** argv) {
 
 }
 
-
+int extract_thread_level(int nthreads) {
+	int thread_level;
+	if (nthreads <= 1)
+		thread_level = 0;
+	else if (nthreads == 2)
+		thread_level = 1;
+	else if (nthreads == 4)
+		thread_level = 2;
+	else if (nthreads == 8)
+		thread_level = 3;
+	else if (nthreads == 16)
+		thread_level = 4;
+	else if (nthreads == 32)
+		thread_level = 5;
+	else
+		thread_level = 6;
+	return thread_level;
+}

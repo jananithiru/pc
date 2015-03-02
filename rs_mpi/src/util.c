@@ -7,68 +7,65 @@
 
 #include "my_headers.h"
 
+/**
+ * @brief Read an array of integers from a file.
+ *
+ * @param filename The name of the file to read from
+ * @param numbers The array of numbers will be stored here
+ *
+ */
 
-
-void read_numbers(
-		char const * const filename,
-		array_d * const numbers) {
+void read_numbers(char const * const filename, array_d * const numbers) {
 
 	FILE * fin;
-	unsigned int temp;
+	int temp;
 
 	int scanresult;
 
 	if ((fin = fopen(filename, "r")) == NULL) {
-		fprintf(stderr, "error opening '%s'\n",filename);
+		fprintf(stderr, "error opening '%s'\n", filename);
 		abort();
 	}
 
-	while ((scanresult = fscanf(fin, "%u", &temp)) > 0) {
-		insert_array(numbers,temp);
+	while ((scanresult = fscanf(fin, "%d", &temp)) > 0) {
+		insert_array(numbers, temp);
 	}
 
 	fclose(fin);
 }
 
-
-
 /**
-* @brief Write an array of integers to a file.
-*
-* @param filename The name of the file to write to.
-* @param numbers The array of numbers.
-* @param nnumbers How many numbers to write.
-*/
-void print_numbers(
-    char const * const filename,
-    int const * const numbers,
-    size_t const nnumbers)
-{
-  size_t i;
-  FILE * fout;
+ * @brief Write an array of integers to a file.
+ *
+ * @param filename The name of the file to write to.
+ * @param numbers The array of numbers.
+ * @param nnumbers How many numbers to write.
+ */
+void print_numbers(char const * const filename, int const * const numbers,
+		size_t const nnumbers) {
+	size_t i;
+	FILE * fout;
 
-  /* open file */
-  if((fout = fopen(filename, "w")) == NULL) {
-    fprintf(stderr, "error opening '%s'\n", filename);
-    abort();
-  }
+	/* open file */
+	if ((fout = fopen(filename, "w")) == NULL) {
+		fprintf(stderr, "error opening '%s'\n", filename);
+		abort();
+	}
 
-  /* write numbers to fout */
-  for(i = 0; i < nnumbers; ++i) {
-    fprintf(fout, "%d\n", numbers[i]);
-  }
+	/* write numbers to fout */
+	for (i = 0; i < nnumbers; ++i) {
+		fprintf(fout, "%d\n", numbers[i]);
+	}
 
-  fclose(fout);
+	fclose(fout);
 }
 
 /**
-* @brief Output the seconds elapsed while sorting. This excludes input and
-*        output time. This should be wallclock time, not CPU time.
-*
-* @param seconds Seconds spent sorting.
-*/
-void print_time(
-    double const seconds)
-{
-  printf("Sort Time: %0.04fs\n", seconds);
+ * @brief Output the seconds elapsed while sorting. This excludes input and
+ *        output time. This should be wallclock time, not CPU time.
+ *
+ * @param seconds Seconds spent sorting.
+ */
+void print_time(double const seconds) {
+	printf("Sort Time: %0.04fs\n", seconds);
 }

@@ -13,7 +13,7 @@
  * Initialize dynammic array
  */
 void init_array(array_d* arr, size_t initial_size) {
-	arr->array = (unsigned int *) malloc(sizeof(unsigned int) * initial_size);
+	arr->array = (int *) malloc(sizeof(int) * initial_size);
 	arr->size = initial_size;
 	arr->used = 0;
 }
@@ -22,11 +22,11 @@ void init_array(array_d* arr, size_t initial_size) {
  * Function to insert every element into dynammic array
  */
 
-void insert_array(array_d* arr, unsigned int num) {
+void insert_array(array_d* arr, int num) {
 	if (arr->used == arr->size) {
 		arr->size = arr->size * 2;
-		arr->array = (unsigned int *) realloc(arr->array,
-				(sizeof(unsigned int) * arr->size));
+		arr->array = (int *) realloc(arr->array,
+				(sizeof(int) * arr->size));
 	}
 	arr->array[arr->used++] = num;
 }
@@ -71,7 +71,7 @@ int array_main(int argc, char* argv[]) {
 	/*init_array(&numbers, 5);
 
 	 for (int i = 0; i < 1000; i++) {
-	 insert_array(&numbers, (unsigned int) i);
+	 insert_array(&numbers, (int) i);
 	 }
 	 printf("\n%d", numbers.array[992]);
 

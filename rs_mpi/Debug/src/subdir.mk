@@ -5,16 +5,19 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/array.c \
+../src/radix_sort.c \
 ../src/rs_mpi.c \
 ../src/util.c 
 
 OBJS += \
 ./src/array.o \
+./src/radix_sort.o \
 ./src/rs_mpi.o \
 ./src/util.o 
 
 C_DEPS += \
 ./src/array.d \
+./src/radix_sort.d \
 ./src/rs_mpi.d \
 ./src/util.d 
 

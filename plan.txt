@@ -1,5 +1,0 @@
-PLAN
-
-Single Thread reads the files 
-Multiple threads are then working together to do the sorting 
-One thread writes the output

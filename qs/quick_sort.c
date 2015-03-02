@@ -118,10 +118,10 @@ void *parallel_qs_helper(void *thread_data) {
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-	int mid = partition_qs(thr_data->numbers, thr_data->left, thr_data->right);
+	int pivot = partition_qs(thr_data->numbers, thr_data->left, thr_data->right);
 
 	qs_thread_data thread_data_array[2];
-	init_qs_thread_data_array(&thread_data_array, mid, thr_data);
+	init_qs_thread_data_array(&thread_data_array, pivot, thr_data);
 
 	pthread_t threads[2];
 	for (int i = 0; i < 2; i++) {
