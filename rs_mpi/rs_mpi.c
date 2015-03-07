@@ -45,6 +45,7 @@ int main(int argc, char* argv[]) {
 	int dest; /* rank of receiver */
 	int tag = 0; /* tag for messages */
 
+	const int root = 0;
 	int chunk_size = 0;
 
 	size_t nelements;
@@ -66,44 +67,50 @@ int main(int argc, char* argv[]) {
 	/* find out number of processes */
 	MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-	if (my_rank == 0) {
+	if (my_rank == root) {
 		/* Read integers from file */
 		init_array(&numbers, INITIAL_SIZE);
 
 		read_numbers(input_file, &numbers);
 
-		chunk_size = numbers.used / nprocs;  //TODO: is it guaranteed to be divisible by numProcs ? 100000000
+		chunk_size = numbers.used / nprocs; //TODO: is it guaranteed to be divisible by numProcs ? 100000000
 
 		printf("\nReading Process 0 %d %d", numbers.used, chunk_size); // ??
 
 	}
 
-	MPI_Bcast(&chunk_size,1,MPI_INT,0,MPI_COMM_WORLD);
-
-/*
-	printf("Process %d %d", numbers.used, nprocs);
-	printf("Radix sort %d %d", numbers.used, chunk_size);
+	MPI_Bcast(&chunk_size, 1, MPI_INT, root, MPI_COMM_WORLD);
 
 	array_d local;
 	init_array(&local, chunk_size);
 
 	MPI_Scatter(numbers.array, chunk_size, MPI_INT, local.array, chunk_size,
-			MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_INT, root, MPI_COMM_WORLD);
 
-	 Call sort here
+	/*
+	 int sum = 0;
+	 for (int i = 0; i < chunk_size; i++) {
+	 printf("\n%d",local.array[i]);
+	 sum += local.array[i];
+	 }
+	 printf("\n Process #%d returned avg=%d\n",my_rank, sum / chunk_size);
 
-	radix_sort(&local.array);
+	 */
 
-		MPI_Reduce(local_sort_times, total_sort_times, 9, MPI_DOUBLE,
+	//Call sort here
+	radix_sort(&local);
+
+	/*
+	 MPI_Reduce(local_sort_times, total_sort_times, 9, MPI_DOUBLE,
 	 MPI_SUM, 0, MPI_COMM_WORLD);
-
+	 */
 
 	MPI_Gather(local.array, chunk_size, MPI_INT, numbers.array, chunk_size,
-			MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_INT, root, MPI_COMM_WORLD);
 
 	//MPI_Barrier(MPI_COMM_WORLD);
-*/
-	if (my_rank == 0) {
+
+	if (my_rank == root) {
 		/*  Write Array here */
 		is_sorted(numbers.array, numbers.used);
 		printf("\nPrinting Process 0 %d %d", numbers.used, nprocs);
