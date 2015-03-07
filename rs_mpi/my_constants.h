@@ -12,3 +12,6 @@
 #define INITIAL_SIZE 1000// 000
 #define TREE_DEPTH 16
 #define BILLION 1000000000L
+
+
+#define INT_SIZE 4

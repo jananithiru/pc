@@ -10,7 +10,7 @@
 int is_sorted(int* const numbers, size_t size) {
 	for (int i = 1; i < size; i++) {
 		if (numbers[i] < numbers[i - 1]) {
-			printf("SORT ERROR; At numbers[%d] %d should not be before %d \n",
+			printf("\nSORT ERROR; At numbers[%d] %d should not be before %d \n",
 					i, numbers[i], numbers[i - 1]);
 			return 0;
 		}
@@ -90,7 +90,7 @@ int radix_sort(array_d* arr) {
 	return 0;
 }
 
-int main() {
+int rs_main() {
 
 	array_d numbers;
 

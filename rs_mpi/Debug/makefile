@@ -8,7 +8,6 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include src/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -29,7 +28,7 @@ all: rs_mpi
 rs_mpi: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	mpicc -L/usr/include -o "rs_mpi" $(OBJS) $(USER_OBJS) $(LIBS)
+	mpicc -L/usr/lib -o "rs_mpi" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
