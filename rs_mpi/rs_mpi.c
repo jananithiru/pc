@@ -37,6 +37,24 @@ void radix_sort_mpi(array_d* numbers, int nprocs) {
 
 }
 
+int printFunction(int nprocs, int my_rank, int chunk_size, const array_d* local) {
+	for (int i = 0; i < nprocs; i++) {
+
+		if (my_rank == i) {
+			printf("\n Process #%d ", my_rank);
+
+			for (int i = 0; i < chunk_size; i++) {
+				printf("\n%d", local.array[i]);
+				fflush(stdout);
+			}
+
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+
+	}
+	return my_rank;
+}
+
 int main(int argc, char* argv[]) {
 
 	int my_rank; /* rank of process */
@@ -51,12 +69,13 @@ int main(int argc, char* argv[]) {
 	size_t nelements;
 	array_d numbers;
 
-	MPI_Status status; /* return status for receive */
-
 	char input_file[LENGTH_FILENAME];
 	char output_file[LENGTH_FILENAME];
 	strcpy(input_file, argv[1]);
 	strcpy(output_file, argv[2]);
+
+	/* return status for receive */
+	MPI_Status status;
 
 	/* start up MPI */
 	MPI_Init(&argc, &argv);
@@ -87,23 +106,19 @@ int main(int argc, char* argv[]) {
 	MPI_Scatter(numbers.array, chunk_size, MPI_INT, local.array, chunk_size,
 			MPI_INT, root, MPI_COMM_WORLD);
 
-	/*
-	 int sum = 0;
-	 for (int i = 0; i < chunk_size; i++) {
-	 printf("\n%d",local.array[i]);
-	 sum += local.array[i];
-	 }
-	 printf("\n Process #%d returned avg=%d\n",my_rank, sum / chunk_size);
-
-	 */
+	local.used = chunk_size;
 
 	//Call sort here
 	radix_sort(&local);
 
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	my_rank = printFunction(nprocs, my_rank, chunk_size, &local);
+
 	/*
-	 MPI_Reduce(local_sort_times, total_sort_times, 9, MPI_DOUBLE,
-	 MPI_SUM, 0, MPI_COMM_WORLD);
-	 */
+	MPI_Reduce(local_sort_times, total_sort_times, 9, MPI_DOUBLE,
+			MPI_SUM, 0, MPI_COMM_WORLD);
+	*/
 
 	MPI_Gather(local.array, chunk_size, MPI_INT, numbers.array, chunk_size,
 			MPI_INT, root, MPI_COMM_WORLD);
@@ -112,9 +127,9 @@ int main(int argc, char* argv[]) {
 
 	if (my_rank == root) {
 		/*  Write Array here */
-		is_sorted(numbers.array, numbers.used);
 		printf("\nPrinting Process 0 %d %d", numbers.used, nprocs);
 		print_numbers(output_file, numbers.array, numbers.used);
+		is_sorted(numbers.array, numbers.used);
 		free_array(&numbers);
 	}
 

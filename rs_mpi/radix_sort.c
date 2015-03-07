@@ -20,6 +20,8 @@ int is_sorted(int* const numbers, size_t size) {
 
 int radix_sort(array_d* arr) {
 
+	//array_d* arr = *array;
+
 	int* temp;
 	int* list = arr->array;
 	int size = arr->used;
@@ -83,6 +85,7 @@ int radix_sort(array_d* arr) {
 			++slotpos[val];
 		}
 	}
+
 	/* Free structures */
 	free(temp);
 	free(matches);
@@ -90,8 +93,29 @@ int radix_sort(array_d* arr) {
 	return 0;
 }
 
-int rs_main() {
 
+
+int test1() {
+	array_d numbers;
+	init_array(&numbers, INITIAL_SIZE);
+
+	insert_array(&numbers, 4);
+	insert_array(&numbers, 3);
+	insert_array(&numbers, 2);
+	insert_array(&numbers, 1);
+
+	radix_sort(&numbers);
+
+	printf("hello");
+	for (int i = 0; i < numbers.used; i++) {
+		printf("\n%d", numbers.array[i]);
+		fflush(stdout);
+	}
+	free_array(&numbers);
+	return 0;
+}
+
+int test0() {
 	array_d numbers;
 
 	init_array(&numbers, INITIAL_SIZE);
@@ -99,25 +123,30 @@ int rs_main() {
 	read_numbers("100.txt", &numbers);
 
 	/*for (int i = 0; i < 1000; i++) {
-		insert_array(&numbers, (int) i);
-	}
-*/
+	 insert_array(&numbers, (int) i);
+	 }
+	 */
 	/*for (int i = 0; i < 1000; i++) {
-		printf("\n%d", numbers.array[i]);
-	}
-*/
+	 printf("\n%d", numbers.array[i]);
+	 }
+	 */
 	radix_sort(&numbers);
 
 	is_sorted(numbers.array, numbers.used);
 
-	printf("\n\nSorted array is: %d ",is_sorted(numbers.array, numbers.used));
+	printf("\n\nSorted array is: %d ", is_sorted(numbers.array, numbers.used));
 
-	for (int i = 0; i < 100; i++) {
-			printf("\n%d", numbers.array[i]);
-		}
+	for (int i = 0; i < numbers.used; i++) {
+		printf("\n%d", numbers.array[i]);
+	}
 
 	free_array(&numbers);
 
+	return 0;
+}
+int kmain() {
+
+	test1();
 	return 0;
 
 }
