@@ -69,3 +69,16 @@ void print_numbers(char const * const filename, int const * const numbers,
 void print_time(double const seconds) {
 	printf("Sort Time: %0.04fs\n", seconds);
 }
+
+void error_logger(char* func_name, char* message) {
+	fprintf(stderr, "\nERROR: func=%s()\tmsg=%s\n", message);
+	MPI_Finalize();
+}
+double get_time_diff(const struct timespec* stop,
+		const struct timespec* start) {
+	/*double diff = ((end->tv_sec *BILLION + end->tv_nsec )
+			- (start->tv_sec * BILLION + start->tv_nsec))/BILLION;*/
+	return ( stop->tv_sec - start->tv_sec )
+	          + (double)( stop->tv_nsec - start->tv_nsec )/(double) BILLION;
+}
+

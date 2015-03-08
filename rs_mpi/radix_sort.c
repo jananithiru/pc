@@ -28,8 +28,8 @@ int* radix_sort3(int *a, array_d* buckets, const int P, const int rank, int * n)
   int p_sum[l_BUCKETS][P]; // array of prefix sums
 
   // MPI request and status
-  MPI_Request req;
-  MPI_Status stat;
+  MPI_Request request;
+  MPI_Status status;
 
   for (int pass = 0; pass < NUM_PASSES; pass++) {          // each pass
 
@@ -61,7 +61,7 @@ int* radix_sort3(int *a, array_d* buckets, const int P, const int rank, int * n)
             p,
             COUNTS_TAG_NUM,
             MPI_COMM_WORLD,
-            &req);
+            &request);
       }
     }
 
@@ -75,7 +75,7 @@ int* radix_sort3(int *a, array_d* buckets, const int P, const int rank, int * n)
             p,
             COUNTS_TAG_NUM,
             MPI_COMM_WORLD,
-            &stat);
+            &status);
 
         // populate counts per bucket for other processes
         for (int i = 0; i < BUCKETS; i++) {
@@ -119,7 +119,7 @@ int* radix_sort3(int *a, array_d* buckets, const int P, const int rank, int * n)
             p,
             p_j,
             MPI_COMM_WORLD,
-            &req);
+            &request);
       }
     }
 
@@ -143,7 +143,7 @@ int* radix_sort3(int *a, array_d* buckets, const int P, const int rank, int * n)
                 p,
                 j,
                 MPI_COMM_WORLD,
-                &stat);
+                &status);
 
           } else {
             // is same process, copy from buckets to our array

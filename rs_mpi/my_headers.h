@@ -10,6 +10,8 @@
 
 #include "my_constants.h"
 
+typedef struct timespec timestamp_type;
+
 /*
  * dynammic array functions present in array.c
  */
