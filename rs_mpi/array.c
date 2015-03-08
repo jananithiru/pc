@@ -8,27 +8,32 @@
 
 #include "my_headers.h"
 
-
 /*
  * Initialize dynammic array
  */
 void init_array(array_d* arr, size_t initial_size) {
 	arr->array = (int *) malloc(sizeof(int) * initial_size);
-	arr->size = initial_size;
-	arr->used = 0;
+	arr->capacity = initial_size;
+	arr->length = 0;
 }
 
 /*
  * Function to insert every element into dynammic array
  */
 
-void insert_array(array_d* arr, int num) {
-	if (arr->used == arr->size) {
-		arr->size = arr->size * 2;
-		arr->array = (int *) realloc(arr->array,
-				(sizeof(int) * arr->size));
+int insert_array(array_d* arr, int num) {
+	if (arr->length == arr->capacity) {
+		size_t c = arr->capacity * 2;
+		int* t = (int *) realloc(arr->array, (sizeof(int) * c));
+		if (!t) {
+			printf("ERROR: Could not realloc for size %d!\n", (int) c);
+			return 0;
+		}
+		arr->array = t;
+		arr->capacity = c;
 	}
-	arr->array[arr->used++] = num;
+	arr->array[arr->length++] = num;
+	return 1;
 }
 
 /*
@@ -38,7 +43,7 @@ void insert_array(array_d* arr, int num) {
 void free_array(array_d* arr) {
 	free(arr->array);
 	arr->array = NULL;
-	arr->used = arr->size = 0;
+	arr->length = arr->capacity = 0;
 }
 
 /*
@@ -57,14 +62,14 @@ int array_main(int argc, char* argv[]) {
 
 	read_numbers(input_file, &numbers);
 
-	size_t nnumbers = numbers.used;
+	size_t nnumbers = numbers.length;
 	printf("Hello MPI World From process 0 writing array");
 
-	for (int i = 0; i < numbers.used; i++) {
+	for (int i = 0; i < numbers.length; i++) {
 		printf("%d", numbers.array[i]);
 	}
 
-	print_numbers(output_file, numbers.array, numbers.used);
+	print_numbers(output_file, numbers.array, numbers.length);
 
 	free_array(&numbers);
 

@@ -6,9 +6,9 @@
 #include <sys/time.h>
 #include <time.h>
 
-#include "my_constants.h"
+#include "mpi.h"
 
-#define _GNU_SOURCE
+#include "my_constants.h"
 
 /*
  * dynammic array functions present in array.c
@@ -16,12 +16,12 @@
 
 typedef struct {
 	int *array;
-	size_t used;
-	size_t size;
+	size_t length;
+	size_t capacity;
 } array_d;
 
 void init_array(array_d* arr, size_t initial_size);
-void insert_array(array_d* arr, int num);
+int insert_array(array_d* arr, int num);
 void free_array(array_d* arr);
 
 /*
