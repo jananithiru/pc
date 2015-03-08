@@ -164,8 +164,8 @@ int* radix_sort3(int *a, array_d* buckets, const int P, const int rank, int * n)
 int is_sorted(int* const numbers, size_t size) {
 	for (int i = 1; i < size; i++) {
 		if (numbers[i] < numbers[i - 1]) {
-			printf("\nSORT ERROR; At numbers[%d] %d should not be before %d \n",
-					i, numbers[i], numbers[i - 1]);
+			printf("\nSORT ERROR; At index[%d] number %d should be before %d \n",
+					i, numbers[i], numbers[i-1]);
 			return 0;
 		}
 	}

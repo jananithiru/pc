@@ -47,26 +47,32 @@ void print_array(const int P, const int rank, int *a, int *n) {
 
 		index += n[rank];
 
-		// print array for rank 0 first
-		for (int i = 0; i < n[rank]; i++) {
+		/*// print array for rank 0 first
+		 for (int i = 0; i < n[rank]; i++) {
 
-			printf("%d\n", a[i]);
-		}
+		 printf("%d\n", a[i]);
+		 }*/
 		// then receive and print from others
 		for (int p = 1; p < P; p++) {
+
+
 			MPI_Status stat;
 			int a_size = n[p];
 			int buff[a_size];
+
 			MPI_Recv(buff, a_size, MPI_INT, p, PRINT_TAG_NUM, MPI_COMM_WORLD,
 					&stat);
-			memcpy(final + index, a, a_size * sizeof(int));
+
+			memcpy(final + index, buff, a_size * sizeof(int));
+
 			index += a_size;
-			for (int i = 0; i < a_size; i++) {
-				printf("%d\n", buff[i]);
-			}
+			/*	for (int i = 0; i < a_size; i++) {
+			 printf("%d\n", buff[i]);
+			 }*/
 		}
 
-		print_numbers("test.txt",final,final_size);
+		print_numbers("test.txt", final, final_size);
+
 		is_sorted(final, final_size);
 
 	} else {
@@ -215,7 +221,6 @@ int main(int argc, char* argv[]) {
 
 	//MPI_Gatherv(local_arr.array,n[my_rank],MPI_INT,numbers,,MPI_INT)
 	// print results
-
 	print_array(nprocs, my_rank, local_arr.array, p_n);
 
 	// Write sorted output into a file using a single process my_rank=0
@@ -223,7 +228,7 @@ int main(int argc, char* argv[]) {
 		//Write Array here
 		printf("\nPrinting in Process 0 nnumbers=%d nprocs=%d chunk_size=%d\n",
 				numbers.length, nprocs, chunk_size);
-	//	print_numbers(output_file, numbers.array, numbers.length);
+		//	print_numbers(output_file, numbers.array, numbers.length);
 		free_array(&numbers);
 
 	}
