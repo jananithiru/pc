@@ -33,13 +33,6 @@ typedef struct timespec timestamp_type;
 #define PRINT_TAG_NUM  COUNTS_TAG_NUM + 1
 #define NUM_TAG PRINT_TAG_NUM + 1
 
-/* defines the number of threads used to parallelize quicksort */
-#define LENGTH_FILENAME 64
-#define INITIAL_SIZE 100000// 000
-#define TREE_DEPTH 16
-#define BILLION 1000000000L
-
-
 /*radix sort definitions */
 
 #define bits2 32
@@ -60,3 +53,9 @@ typedef struct {
 	size_t length;
 	size_t capacity;
 } array_d;
+
+typedef struct {
+	int* array;
+	size_t length;
+	size_t capacity;
+}List;
