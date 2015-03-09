@@ -82,3 +82,24 @@ double get_time_diff(const struct timespec* stop,
 	          + (double)( stop->tv_nsec - start->tv_nsec )/(double) BILLION;
 }
 
+/* usage : (x, 0, 1)
+ * gets rightmost bit of x
+ */
+
+int get_bits(unsigned x, int k, int j) {
+	return (x >> k) & ~(~0 << j);
+}
+
+
+
+int is_sorted(int* const numbers, size_t size) {
+	for (int i = 1; i < size; i++) {
+		if (numbers[i] < numbers[i - 1]) {
+			printf(
+					"\nSORT ERROR; At index[%d] number %d should be before %d \n",
+					i, numbers[i], numbers[i - 1]);
+			return 0;
+		}
+	}
+	return 1;
+}

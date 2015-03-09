@@ -41,3 +41,7 @@ void read_numbers(char const * const filename, array_d * const numbers);
  */
 
 int radix_sort(array_d* arr);
+
+int* mpi_radix_sort(int *local_array, array_d* buckets, int * nelems, const int nprocs,const int my_rank) ;
+int get_bits(unsigned x, int k, int j);
+
