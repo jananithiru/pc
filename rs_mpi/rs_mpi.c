@@ -1,4 +1,3 @@
-
 /*
  ============================================================================
  Name        : rs_mpi.c
@@ -16,55 +15,55 @@ int final_size;
 int* rcounts;
 int* final;
 
-int* radix_sort(int *a, List* buckets, const int P, const int rank, int * n) {
-	int count[B][P];   // array of counts per bucket for all processes
-	int l_count[B];    // array of local process counts per bucket
-	int l_B = B / P;   // number of local buckets per process
-	int p_sum[l_B][P]; // array of prefix sums
+int* radix_sort(int *local_array, d_array* buckets, const int nprocs, const int my_rank, int * chunk_size) {
+	int bin_count[bins][nprocs];
+	int l_count[bins];    // array of local process counts per bucket
+	int l_B = bins / nprocs;   // number of local buckets per process
+	int p_sum[l_B][nprocs]; // array of prefix sums
 
 	// MPI request and status
 	MPI_Request req;
 	MPI_Status stat;
 
-	for (int pass = 0; pass < N; pass++) {          // each pass
+	for (int pass = 0; pass < npasses; pass++) {          // each pass
 
-		// init counts arrays
-		for (int j = 0; j < B; j++) {
-			count[j][rank] = 0;
+		// Set to 0s , else wrong values
+		for (int j = 0; j < bins; j++) {
+			bin_count[j][my_rank] = 0;
 			l_count[j] = 0;
 			buckets[j].length = 0;
 		}
 
 		// count items per bucketi
-		for (int i = 0; i < *n; i++) {
-			unsigned int idx = bits(a[i], pass * g, g);
-			count[idx][rank]++;
+		for (int i = 0; i < *chunk_size; i++) {
+			unsigned int idx = get_lsd_group_bits(local_array[i], pass * r, r);
+			bin_count[idx][my_rank]++;
 			l_count[idx]++;
-			if (!add_item(&buckets[idx], a[i])) {
+			if (!insert_item(&buckets[idx], local_array[i])) {
 				return NULL;
 			}
 		}
 
 		// do one-to-all transpose
-		for (int p = 0; p < P; p++) {
-			if (p != rank) {
+		for (int p = 0; p < nprocs; p++) {
+			if (p != my_rank) {
 				// send counts of this process to others
 				MPI_Isend(l_count,
-				B, MPI_INT, p,
-				COUNTS_TAG_NUM, MPI_COMM_WORLD, &req);
+				bins, MPI_INT, p,
+				C_TAG_NUM, MPI_COMM_WORLD, &req);
 			}
 		}
 
 		// receive counts from others
-		for (int p = 0; p < P; p++) {
-			if (p != rank) {
+		for (int p = 0; p < nprocs; p++) {
+			if (p != my_rank) {
 				MPI_Recv(l_count,
-				B, MPI_INT, p,
-				COUNTS_TAG_NUM, MPI_COMM_WORLD, &stat);
+				bins, MPI_INT, p,
+				C_TAG_NUM, MPI_COMM_WORLD, &stat);
 
 				// populate counts per bucket for other processes
-				for (int i = 0; i < B; i++) {
-					count[i][p] = l_count[i];
+				for (int i = 0; i < bins; i++) {
+					bin_count[i][p] = l_count[i];
 				}
 			}
 		}
@@ -72,31 +71,31 @@ int* radix_sort(int *a, List* buckets, const int P, const int rank, int * n) {
 		// calculate new size based on values received from all processes
 		int new_size = 0;
 		for (int j = 0; j < l_B; j++) {
-			int idx = j + rank * l_B;
-			for (int p = 0; p < P; p++) {
+			int idx = j + my_rank * l_B;
+			for (int p = 0; p < nprocs; p++) {
 				p_sum[j][p] = new_size;
-				new_size += count[idx][p];
+				new_size += bin_count[idx][p];
 			}
 		}
 
 		// reallocate array if newly calculated size is larger
-		if (new_size > *n) {
-			int* temp = realloc(a, new_size * sizeof(int));
-			if (!a) {
-				if (rank == 0) {
+		if (new_size > *chunk_size) {
+			int* temp = realloc(local_array, new_size * sizeof(int));
+			if (!local_array) {
+				if (my_rank == 0) {
 					printf("ERROR: Could not realloc for size %d!\n", new_size);
 				}
 				return NULL;
 			}
 			// reassign pointer back to original
-			a = temp;
+			local_array = temp;
 		}
 
 		// send keys of this process to others
-		for (int j = 0; j < B; j++) {
+		for (int j = 0; j < bins; j++) {
 			int p = j / l_B;  // determine which process this buckets belongs to
 			int p_j = j % l_B; // transpose to that process local bucket index
-			if (p != rank && buckets[j].length > 0) {
+			if (p != my_rank && buckets[j].length > 0) {
 				MPI_Isend(buckets[j].array, buckets[j].length, MPI_INT, p, p_j,
 						MPI_COMM_WORLD, &req);
 			}
@@ -105,16 +104,16 @@ int* radix_sort(int *a, List* buckets, const int P, const int rank, int * n) {
 		// receive keys from other processes
 		for (int j = 0; j < l_B; j++) {
 			// transpose from local to global index
-			int idx = j + rank * l_B;
-			for (int p = 0; p < P; p++) {
+			int idx = j + my_rank * l_B;
+			for (int p = 0; p < nprocs; p++) {
 
 				// get bucket count
-				int b_count = count[idx][p];
+				int b_count = bin_count[idx][p];
 				if (b_count > 0) {
 
 					// point to an index in array where to insert received keys
-					int *dest = &a[p_sum[j][p]];
-					if (rank != p) {
+					int *dest = &local_array[p_sum[j][p]];
+					if (my_rank != p) {
 						MPI_Recv(dest, b_count, MPI_INT, p, j, MPI_COMM_WORLD,
 								&stat);
 
@@ -126,134 +125,137 @@ int* radix_sort(int *a, List* buckets, const int P, const int rank, int * n) {
 				}
 			}
 		}
-
 		// update new size
-		*n = new_size;
+		*chunk_size = new_size;
 	}
 
-	return a;
+	return local_array;
 }
 
 int main(int argc, char** argv) {
 
-	int rank, size, n_total;
-	int print_results = 0;
 	char input_file[LENGTH_FILENAME];
 	char output_file[LENGTH_FILENAME];
+
+	t_time start, stop;
+	d_array numbers;
+
+	int my_rank, nprocs, nnumbers;
+	int print_results = 0;
 
 	strcpy(input_file, argv[1]);
 	strcpy(output_file, argv[2]);
 
 	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-	timestamp_type start, stop;
-
-	List numbers;
-
-	if (rank == 0) {
+	if (my_rank == 0) {
 		numbers.array = (int *) malloc(sizeof(int) * INITIAL_SIZE);
 		numbers.capacity = INITIAL_SIZE;
 		numbers.length = 0;
 		read_numbers(input_file, &numbers);
-		final_size = n_total = numbers.length;
+		final_size = nnumbers = numbers.length;
 	}
 
 	/* Broadcast number of elements to all processes. No Shared memory remember? */
-	MPI_Bcast(&n_total, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&nnumbers, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	int n = n_total / size;
+	int chunk_size = nnumbers / nprocs;
 
-	int b_capacity = n / B;
-	if (b_capacity < B) {
-		b_capacity = B;
+	int b_capacity = chunk_size / bins;
+	if (b_capacity < bins) {
+		b_capacity = bins;
 	}
-	List* buckets = malloc(B * sizeof(List));
-	for (int j = 0; j < B; j++) {
+	d_array* buckets = malloc(bins * sizeof(d_array));
+	for (int j = 0; j < bins; j++) {
 		buckets[j].array = malloc(b_capacity * sizeof(int));
-		buckets[j].capacity = B;
+		buckets[j].capacity = bins;
 	}
 
-	int* a = malloc(sizeof(int) * n);
+	int* local_array = malloc(sizeof(int) * chunk_size);
 
-	MPI_Scatter(numbers.array, n, MPI_INT, a, n, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Scatter(numbers.array, chunk_size, MPI_INT, local_array, chunk_size, MPI_INT, 0, MPI_COMM_WORLD);
 
-//-------------------------------------------------------------------------------
+	/* Start Radix Sort */
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	if (rank == 0) {
+	if (my_rank == 0) {
 		clock_gettime(CLOCK_REALTIME, &start);
-		//free(numbers.array);
+		free(numbers.array);
 	}
 
-	a = radix_sort(&a[0], buckets, size, rank, &n);
+	local_array = radix_sort(&local_array[0], buckets, nprocs, my_rank, &chunk_size);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	if (rank == 0) {
+	if (my_rank == 0) {
 		clock_gettime(CLOCK_REALTIME, &stop);
 		print_time(get_time_diff(&stop, &start));
 	}
 
-//-------------------------------------------------------------------------------
-	// store number of items per each process after the sort
-	int* p_n = malloc(size * sizeof(int));
+	/* End Radix Sort */
 
-	// first store our own number
-	p_n[rank] = n;
+	int* n_proc = malloc(nprocs * sizeof(int));
 
-	// communicate number of items among other processes
+	n_proc[my_rank] = chunk_size;
+
 	MPI_Request req;
 	MPI_Status stat;
 
-	for (int i = 0; i < size; i++) {
-		if (i != rank) {
-			MPI_Isend(&n, 1, MPI_INT, i,
+	for (int i = 0; i < nprocs; i++) {
+		if (i != my_rank) {
+			MPI_Isend(&chunk_size, 1, MPI_INT, i,
 			NUM_TAG, MPI_COMM_WORLD, &req);
 		}
 	}
 
-	for (int i = 0; i < size; i++) {
-		if (i != rank) {
-			MPI_Recv(&p_n[i], 1, MPI_INT, i,
+	for (int i = 0; i < nprocs; i++) {
+		if (i != my_rank) {
+			MPI_Recv(&n_proc[i], 1, MPI_INT, i,
 			NUM_TAG, MPI_COMM_WORLD, &stat);
 		}
 	}
 
-	if (rank == 0) {
+	/* create final merge array */
+	if (my_rank == 0) {
 		final = malloc(sizeof(int) * final_size);
 	}
 
-	int displs[size];
+	/* calculate displacements for Gatherv */
+	int displs[nprocs];
 	int sum = 0;
 	displs[0] = sum;
 
-	for (int i = 1; i < size; i++) {
-		sum = sum + p_n[i - 1];
+	for (int i = 1; i < nprocs; i++) {
+		sum = sum + n_proc[i - 1];
 		displs[i] = sum;
 	}
 
-	MPI_Gatherv(final, p_n[rank], MPI_INT, a, p_n, displs, MPI_INT, 0,
+	/* Get all the data from the individual processes */
+	MPI_Gatherv(final, n_proc[my_rank], MPI_INT, local_array, n_proc, displs, MPI_INT, 0,
 			MPI_COMM_WORLD);
 
-	if (rank == 0) {
+	/* Data output */
+
+	if (my_rank == 0) {
+
 		print_numbers(output_file, final, final_size);
+
+		/* To check if sort is working correctly*/
 		printf("\nSorted=%d\n", is_sorted(final, final_size));
 
 	}
 
-	// release MPI resources
 	MPI_Finalize();
 
-	// release memory allocated resources
-	for (int j = 0; j < B; j++) {
+	for (int j = 0; j < bins; j++) {
 		free(buckets[j].array);
 	}
 	free(buckets);
-	free(a);
-	free(p_n);
+	free(local_array);
+	free(n_proc);
 	free(final);
 
 	return 0;

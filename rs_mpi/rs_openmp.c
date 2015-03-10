@@ -11,30 +11,56 @@
 #include "omp.h"
 
 int final_size;
-int* rcounts;
-int* final;
 
-void radix_sort(int *a, const int n) {
-	int* t = malloc(n * sizeof(int));     // temp array used for sorting
-	int count[B];                       // array of counts per bucket
+void radix_sort(int *data, const int nnumbers) {
+	unsigned * buffer = malloc(nnumbers * sizeof(unsigned));
+	int total_digits = sizeof(unsigned) * 8;
 
-	for (int pass = 0; pass < b / g; pass++) {       // each pass
-		for (int j = 0; j < B; j++)
-			count[j] = 0;    // init counts array
-		for (int i = 0; i < n; i++) {
-			count[bits(a[i], pass * g, g)]++;           // count keys per bucket
+	//Each thread use local_bucket to move data
+	size_t i;
+	for (int shift = 0; shift < total_digits; shift += r) {
+		size_t bucket[bins] = { 0 };
+		size_t local_bucket[bins] = { 0 }; // size needed in each bucket/thread
+		//1st pass, scan whole and check the count
+#pragma omp parallel firstprivate(local_bucket)
+		{
+#pragma omp for schedule(static) nowait
+			for (i = 0; i < nnumbers; i++) {
+				local_bucket[DIGITS(data[i], shift)]++;
+			}
+#pragma omp critical
+			for (i = 0; i < bins; i++) {
+				bucket[i] += local_bucket[i];
+			}
+#pragma omp barrier
+#pragma omp single
+			for (i = 1; i < bins; i++) {
+				bucket[i] += bucket[i - 1];
+			}
+			int nthreads = omp_get_num_threads();
+			int tid = omp_get_thread_num();
+			for (int cur_t = nthreads - 1; cur_t >= 0; cur_t--) {
+				if (cur_t == tid) {
+					for (i = 0; i < bins; i++) {
+						bucket[i] -= local_bucket[i];
+						local_bucket[i] = bucket[i];
+					}
+				} else { //just do barrier
+#pragma omp barrier
+				}
+
+			}
+#pragma omp for schedule(static)
+			for (i = 0; i < nnumbers; i++) { //note here the end condition
+				buffer[local_bucket[DIGITS(data[i], shift)]++] = data[i];
+			}
 		}
-		for (int j = 1; j < B; j++) {
-			count[j] = count[j - 1] + count[j];          // compute prefix sum
-		}
-		for (int i = n - 1; i >= 0; i--) {
-			int idx = --count[bits(a[i], pass * g, g)];
-			t[idx] = a[i];                            // transpose to temp array
-		}
-		for (int i = 0; i < n; i++)
-			a[i] = t[i];     // copy back to master
+		//now move data
+		unsigned* tmp = data;
+		data = buffer;
+		buffer = tmp;
 	}
-	free(t);
+	free(buffer);
 }
 
 int main(int argc, char** argv) {
@@ -49,47 +75,32 @@ int main(int argc, char** argv) {
 	nthreads = atoi(argv[2]);
 	strcpy(output_file, argv[3]);
 
-	timestamp_type start, stop;
+	printf("%s",argv[2]);
+	printf("%d",nthreads);
 
-	List numbers;
+	omp_set_num_threads(nthreads);
 
-	#pragma omp parallel num_threads(nthreads)
-	{
-		#pragma omp single
-		{
-			numbers.array = (int *) malloc(sizeof(int) * INITIAL_SIZE);
-			numbers.capacity = INITIAL_SIZE;
-			numbers.length = 0;
-			read_numbers(input_file, &numbers);
-			final_size = n = numbers.length;
+	t_time start, stop;
+	d_array numbers;
 
-			printf("%d", final_size);
-		}
-		int tid = omp_get_thread_num();
+	numbers.array = (int *) malloc(sizeof(int) * INITIAL_SIZE);
+	numbers.capacity = INITIAL_SIZE;
+	numbers.length = 0;
+	read_numbers(input_file, &numbers);
 
-		// take a timestamp before the sort starts
-		if (tid == 0) {
-			clock_gettime(CLOCK_REALTIME, &start);
-			//free(numbers.array);
-		}
+	final_size = n = numbers.length;
 
-		// sort elements
-		radix_sort(&numbers.array[0], n);
+	clock_gettime(CLOCK_REALTIME, &start);
 
-		if (tid == 0) {
-			clock_gettime(CLOCK_REALTIME, &stop);
-			print_time(get_time_diff(&stop, &start));
-		}
+	/* Call radix sort here */
+	radix_sort(&numbers.array[0], n);
 
-		#pragma omp single
-		{
-			print_array(&numbers.array[0], n);
-			printf("\nSorted=%d\n", is_sorted(numbers.array, n));
-		}
+	clock_gettime(CLOCK_REALTIME, &stop);
+	print_time(get_time_diff(&stop, &start));
 
-		printf("Hello World from thread number %d\n", tid);
-	}
-	// release resources no longer used
+	printf("\nSorted=%d\n", is_sorted(numbers.array, n));
+	print_numbers(output_file, numbers.array, n);
+
 	free(numbers.array);
 	return 0;
 }
