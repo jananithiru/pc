@@ -1,0 +1,1 @@
+imageManager.d: ../imageManager.c
